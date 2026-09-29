@@ -147,22 +147,24 @@ const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) =>
                     />
                 </div>
             </div>
-            <button
-                type="button"
-                className="jobEdit"
-                aria-label={`Edit ${job.companyName}`}
-                onClick={() => onEdit(job.id)}
-            >
-                <EditIcon />
-            </button>
-            <button
-                type="button"
-                className="jobDelete"
-                aria-label={`Delete ${job.companyName}`}
-                onClick={() => onDelete(job.id)}
-            >
-                <TrashIcon />
-            </button>
+            <div className="jobItemActions">
+                <button
+                    type="button"
+                    className="jobEdit"
+                    aria-label={`Edit ${job.companyName}`}
+                    onClick={() => onEdit(job.id)}
+                >
+                    <EditIcon />
+                </button>
+                <button
+                    type="button"
+                    className="jobDelete"
+                    aria-label={`Delete ${job.companyName}`}
+                    onClick={() => onDelete(job.id)}
+                >
+                    <TrashIcon />
+                </button>
+            </div>
         </li>
     );
 };

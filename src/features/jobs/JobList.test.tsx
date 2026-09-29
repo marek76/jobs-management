@@ -367,9 +367,13 @@ describe('JobList', () => {
         renderJobList();
 
         const edit = screen.getByRole('button', { name: 'Edit Acme' });
+        const remove = screen.getByRole('button', { name: 'Delete Acme' });
         const item = edit.closest('.jobItem');
+        const actions = edit.parentElement;
 
-        expect(screen.getByRole('button', { name: 'Delete Acme' })).toBeInTheDocument();
+        expect(actions).toHaveClass('jobItemActions');
+        expect(actions).toContainElement(remove);
+        expect(item).toContainElement(actions);
         expect(item).not.toHaveClass('jobItemHovered');
 
         await user.hover(screen.getByText('Acme'));
