@@ -1,0 +1,70 @@
+.jobDetailsOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+}
+
+.jobDetailsDialog {
+    width: min(480px, calc(100% - 2rem));
+    padding: 1.25rem;
+    border: 1px solid currentColor;
+    background: var(--bg, #fff);
+    color: var(--text-h, inherit);
+}
+
+.jobDetailsDialog h3 {
+    margin: 0 0 1rem;
+}
+
+.jobDetailsDialog dl {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0.45rem 0.75rem;
+    margin: 0;
+}
+
+.jobDetailsDialog dt {
+    font-weight: 600;
+}
+
+.jobDetailsDialog dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.jobDetailsDialog a {
+    color: inherit;
+}
+
+.jobDetailsActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.jobDetailsActions button {
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    padding: 0.35rem 0.85rem;
+    cursor: pointer;
+}
+
+.jobDetailsActions button:hover {
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.jobDetailsActions button.isDanger {
+    border-color: #c0392b;
+    color: #c0392b;
+}
+
+.jobDetailsActions button.isDanger:hover {
+    background-color: color-mix(in srgb, #c0392b 12%, transparent);
+}

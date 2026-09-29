@@ -86,6 +86,7 @@
     box-sizing: border-box;
     padding: 0.75rem 0;
     color: #000;
+    cursor: pointer;
 }
 
 @media (prefers-color-scheme: dark) {

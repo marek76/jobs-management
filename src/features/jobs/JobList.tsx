@@ -4,6 +4,7 @@ import type { JobFilter, JobItem, JobItemFields, JobItemStateKey } from '../../t
 import { JobItemState } from '../../types/types';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { EditJobDialog } from './EditJobDialog';
+import { JobDetailsDialog } from './JobDetailsDialog';
 import { filterJobs } from './filterJobs';
 import { toDateInputValue } from './jobDates';
 import { JobStateSelect } from './JobStateSelect';
@@ -93,12 +94,13 @@ const formatJobDates = (job: JobItem): string => {
 
 type JobListItemProps = {
     job: JobItem;
+    onOpen: (id: number) => void;
     onEdit: (id: number) => void;
     onDelete: (id: number) => void;
     onSetState: (id: number, state: JobItemStateKey) => void;
 };
 
-const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) => {
+const JobListItem = ({ job, onOpen, onEdit, onDelete, onSetState }: JobListItemProps) => {
     const [hovered, setHovered] = useState(false);
     const datesLabel = formatJobDates(job);
     const link = job.link.trim();
@@ -106,6 +108,7 @@ const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) =>
     return (
         <li
             className={`jobItem ${job.state}${hovered ? ' jobItemHovered' : ''}`}
+            onClick={() => onOpen(job.id)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onFocus={() => setHovered(true)}
@@ -128,6 +131,7 @@ const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) =>
                             rel="noopener noreferrer"
                             aria-label="Open job link"
                             title={link}
+                            onClick={(event) => event.stopPropagation()}
                         >
                             <LinkIcon />
                         </a>
@@ -140,11 +144,13 @@ const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) =>
                     >
                         <CalendarIcon />
                     </span>
-                    <JobStateSelect
-                        companyName={job.companyName}
-                        state={job.state}
-                        onSelect={(nextState) => onSetState(job.id, nextState)}
-                    />
+                    <span onClick={(event) => event.stopPropagation()}>
+                        <JobStateSelect
+                            companyName={job.companyName}
+                            state={job.state}
+                            onSelect={(nextState) => onSetState(job.id, nextState)}
+                        />
+                    </span>
                 </div>
             </div>
             <div className="jobItemActions">
@@ -152,7 +158,10 @@ const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) =>
                     type="button"
                     className="jobEdit"
                     aria-label={`Edit ${job.companyName}`}
-                    onClick={() => onEdit(job.id)}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onEdit(job.id);
+                    }}
                 >
                     <EditIcon />
                 </button>
@@ -160,7 +169,10 @@ const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) =>
                     type="button"
                     className="jobDelete"
                     aria-label={`Delete ${job.companyName}`}
-                    onClick={() => onDelete(job.id)}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onDelete(job.id);
+                    }}
                 >
                     <TrashIcon />
                 </button>
@@ -174,10 +186,15 @@ export const JobList = ({ filter }: JobListProps) => {
     const jobs = filterJobs(state.jobs, filter);
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const [editingJobId, setEditingJobId] = useState<number | null>(null);
+    const [viewingJobId, setViewingJobId] = useState<number | null>(null);
 
     const editingJob = editingJobId === null
         ? null
         : state.jobs.find((job) => job.id === editingJobId) ?? null;
+
+    const viewingJob = viewingJobId === null
+        ? null
+        : state.jobs.find((job) => job.id === viewingJobId) ?? null;
 
     const confirmDelete = () => {
         if (pendingDeleteId === null) {
@@ -231,6 +248,7 @@ export const JobList = ({ filter }: JobListProps) => {
                                     <JobListItem
                                         key={job.id}
                                         job={job}
+                                        onOpen={setViewingJobId}
                                         onEdit={setEditingJobId}
                                         onDelete={setPendingDeleteId}
                                         onSetState={(id, nextState) => dispatch({
@@ -251,6 +269,20 @@ export const JobList = ({ filter }: JobListProps) => {
                 <DeleteConfirmDialog
                     onConfirm={confirmDelete}
                     onCancel={() => setPendingDeleteId(null)}
+                />
+            )}
+            {viewingJob !== null && (
+                <JobDetailsDialog
+                    job={viewingJob}
+                    onClose={() => setViewingJobId(null)}
+                    onEdit={() => {
+                        setEditingJobId(viewingJob.id);
+                        setViewingJobId(null);
+                    }}
+                    onDelete={() => {
+                        setPendingDeleteId(viewingJob.id);
+                        setViewingJobId(null);
+                    }}
                 />
             )}
             {editingJob !== null && (
