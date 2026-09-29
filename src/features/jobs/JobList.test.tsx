@@ -412,7 +412,7 @@ describe('JobList', () => {
         expect(within(dialog).getByText('Applied', { selector: 'dt' })).toBeInTheDocument();
         expect(within(dialog).getByText('2026-09-09')).toBeInTheDocument();
         expect(within(dialog).getByText('Status')).toBeInTheDocument();
-        expect(within(dialog).getByText('Applied', { selector: 'dd' })).toBeInTheDocument();
+        expect(within(dialog).getByRole('button', { name: 'Set status of Acme' })).toHaveTextContent('Applied');
         const link = within(dialog).getByRole('link', { name: 'https://example.com/jobs/acme' });
         expect(link).toHaveAttribute('href', 'https://example.com/jobs/acme');
         expect(link).toHaveAttribute('target', '_blank');
@@ -420,6 +420,42 @@ describe('JobList', () => {
         expect(within(dialog).getByRole('button', { name: 'Close' })).toBeInTheDocument();
         expect(within(dialog).getByRole('button', { name: 'Edit' })).toBeInTheDocument();
         expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    });
+
+    it('changes status from the details popup the same way as the list', async () => {
+        const user = userEvent.setup();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+        ]));
+
+        renderJobList();
+        await user.click(screen.getByText('Acme'));
+
+        const dialog = screen.getByRole('dialog', { name: 'Acme' });
+        await user.click(within(dialog).getByRole('button', { name: 'Set status of Acme' }));
+        await user.click(screen.getByRole('menuitem', { name: 'Applied' }));
+
+        expect(screen.getByRole('dialog', { name: 'Acme' })).toBeInTheDocument();
+        expect(within(dialog).getByRole('button', { name: 'Set status of Acme' })).toHaveTextContent('Applied');
+        expect(within(dialog).getByText(todayDateInputValue())).toBeInTheDocument();
+        expect(within(screen.getByRole('region', { name: 'Applied' })).getByText('Acme')).toBeInTheDocument();
+
+        await user.click(within(dialog).getByRole('button', { name: 'Set status of Acme' }));
+        expect(screen.getByRole('menuitem', { name: 'Rejected' })).toBeInTheDocument();
+        expect(screen.getByRole('menuitem', { name: 'Accepted' })).toBeInTheDocument();
+        await user.click(screen.getByRole('menuitem', { name: 'Rejected' }));
+
+        expect(within(dialog).queryByRole('button', { name: 'Set status of Acme' })).not.toBeInTheDocument();
+        expect(within(dialog).getByText('Rejected')).toBeInTheDocument();
+        expect(within(screen.getByRole('region', { name: 'Rejected' })).getByText('Acme')).toBeInTheDocument();
     });
 
     it('shows placeholders for missing description, link, and applied date', async () => {
@@ -443,7 +479,7 @@ describe('JobList', () => {
         const dialog = screen.getByRole('dialog', { name: 'Acme' });
         expect(within(dialog).getAllByText('—')).toHaveLength(3);
         expect(within(dialog).queryByRole('link')).not.toBeInTheDocument();
-        expect(within(dialog).getByText('New', { selector: 'dd' })).toBeInTheDocument();
+        expect(within(dialog).getByRole('button', { name: 'Set status of Acme' })).toHaveTextContent('New');
     });
 
     it('closes the details popup from Close and from the overlay', async () => {

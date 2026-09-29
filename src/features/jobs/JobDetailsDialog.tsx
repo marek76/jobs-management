@@ -1,6 +1,6 @@
-import type { JobItem } from '../../types/types';
-import { JobItemState } from '../../types/types';
+import type { JobItem, JobItemStateKey } from '../../types/types';
 import { toDateInputValue } from './jobDates';
+import { JobStateSelect } from './JobStateSelect';
 import './JobDetailsDialog.css';
 
 type JobDetailsDialogProps = {
@@ -8,6 +8,7 @@ type JobDetailsDialogProps = {
     onClose: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onSetState: (state: JobItemStateKey) => void;
 };
 
 const EMPTY_VALUE = '—';
@@ -17,7 +18,7 @@ const textOrEmpty = (value: string): string => {
     return trimmed === '' ? EMPTY_VALUE : trimmed;
 };
 
-export const JobDetailsDialog = ({ job, onClose, onEdit, onDelete }: JobDetailsDialogProps) => {
+export const JobDetailsDialog = ({ job, onClose, onEdit, onDelete, onSetState }: JobDetailsDialogProps) => {
     const link = job.link.trim();
 
     return (
@@ -52,7 +53,13 @@ export const JobDetailsDialog = ({ job, onClose, onEdit, onDelete }: JobDetailsD
                         {job.submissionDate === null ? EMPTY_VALUE : toDateInputValue(job.submissionDate)}
                     </dd>
                     <dt>Status</dt>
-                    <dd>{JobItemState[job.state]}</dd>
+                    <dd>
+                        <JobStateSelect
+                            companyName={job.companyName}
+                            state={job.state}
+                            onSelect={onSetState}
+                        />
+                    </dd>
                 </dl>
                 <div className="jobDetailsActions">
                     <button type="button" onClick={onClose}>

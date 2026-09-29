@@ -283,6 +283,13 @@ export const JobList = ({ filter }: JobListProps) => {
                         setPendingDeleteId(viewingJob.id);
                         setViewingJobId(null);
                     }}
+                    onSetState={(nextState) => dispatch({
+                        type: 'SET_STATE',
+                        payload: {
+                            id: viewingJob.id,
+                            state: nextState,
+                        },
+                    })}
                 />
             )}
             {editingJob !== null && (
