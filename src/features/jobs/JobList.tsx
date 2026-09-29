@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useStore } from '../../context/useStore';
 import type { JobFilter, JobItem, JobItemFields, JobItemStateKey } from '../../types/types';
 import { JobItemState } from '../../types/types';
@@ -7,6 +7,7 @@ import { EditJobDialog } from './EditJobDialog';
 import { JobDetailsDialog } from './JobDetailsDialog';
 import { filterJobs } from './filterJobs';
 import { toDateInputValue } from './jobDates';
+import { canSetJobState, getNextJobStates } from './jobStateTransitions';
 import { JobStateSelect } from './JobStateSelect';
 import './JobList.css';
 
@@ -15,6 +16,7 @@ type JobListProps = {
 };
 
 const JOB_COLUMNS = Object.keys(JobItemState) as JobItemStateKey[];
+const JOB_DRAG_TYPE = 'application/x-job-id';
 
 const EditIcon = () => (
     <svg
@@ -98,17 +100,54 @@ type JobListItemProps = {
     onEdit: (id: number) => void;
     onDelete: (id: number) => void;
     onSetState: (id: number, state: JobItemStateKey) => void;
+    onDragStart: (job: JobItem) => void;
+    onDragEnd: () => void;
 };
 
-const JobListItem = ({ job, onOpen, onEdit, onDelete, onSetState }: JobListItemProps) => {
+const JobListItem = ({
+    job,
+    onOpen,
+    onEdit,
+    onDelete,
+    onSetState,
+    onDragStart,
+    onDragEnd,
+}: JobListItemProps) => {
     const [hovered, setHovered] = useState(false);
+    const ignoreClickRef = useRef(false);
     const datesLabel = formatJobDates(job);
     const link = job.link.trim();
+    const isDraggable = getNextJobStates(job.state).length > 0;
 
     return (
         <li
-            className={`jobItem ${job.state}${hovered ? ' jobItemHovered' : ''}`}
-            onClick={() => onOpen(job.id)}
+            className={`jobItem ${job.state}${hovered ? ' jobItemHovered' : ''}${isDraggable ? ' isDraggable' : ''}`}
+            draggable={isDraggable}
+            onClick={() => {
+                if (ignoreClickRef.current) {
+                    ignoreClickRef.current = false;
+                    return;
+                }
+
+                onOpen(job.id);
+            }}
+            onDragStart={(event) => {
+                if (!isDraggable || (event.target instanceof Element && event.target.closest('a, button'))) {
+                    event.preventDefault();
+                    return;
+                }
+
+                ignoreClickRef.current = true;
+                event.dataTransfer.setData(JOB_DRAG_TYPE, String(job.id));
+                event.dataTransfer.effectAllowed = 'move';
+                onDragStart(job);
+            }}
+            onDragEnd={() => {
+                onDragEnd();
+                window.setTimeout(() => {
+                    ignoreClickRef.current = false;
+                }, 0);
+            }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onFocus={() => setHovered(true)}
@@ -131,6 +170,7 @@ const JobListItem = ({ job, onOpen, onEdit, onDelete, onSetState }: JobListItemP
                             rel="noopener noreferrer"
                             aria-label="Open job link"
                             title={link}
+                            draggable={false}
                             onClick={(event) => event.stopPropagation()}
                         >
                             <LinkIcon />
@@ -187,6 +227,9 @@ export const JobList = ({ filter }: JobListProps) => {
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const [editingJobId, setEditingJobId] = useState<number | null>(null);
     const [viewingJobId, setViewingJobId] = useState<number | null>(null);
+    const [draggingJob, setDraggingJob] = useState<JobItem | null>(null);
+    const [dropTarget, setDropTarget] = useState<JobItemStateKey | null>(null);
+    const draggingJobRef = useRef<JobItem | null>(null);
 
     const editingJob = editingJobId === null
         ? null
@@ -223,6 +266,29 @@ export const JobList = ({ filter }: JobListProps) => {
         setEditingJobId(null);
     };
 
+    const clearDragState = () => {
+        draggingJobRef.current = null;
+        setDraggingJob(null);
+        setDropTarget(null);
+    };
+
+    const beginDrag = (job: JobItem) => {
+        draggingJobRef.current = job;
+        setDraggingJob(job);
+    };
+
+    const moveJobToColumn = (jobId: number, nextState: JobItemStateKey) => {
+        dispatch({
+            type: 'SET_STATE',
+            payload: {
+                id: jobId,
+                state: nextState,
+            },
+        });
+    };
+
+    const getDraggingJob = () => draggingJobRef.current ?? draggingJob;
+
     return (
         <>
             <div className="jobBoard">
@@ -233,12 +299,55 @@ export const JobList = ({ filter }: JobListProps) => {
 
                     const columnJobs = jobs.filter((job) => job.state === columnState);
                     const titleId = `job-column-${columnState}`;
+                    const activeDragJob = draggingJob;
+                    const canDrop = activeDragJob !== null
+                        && canSetJobState(activeDragJob.state, columnState);
+                    const isDropTarget = dropTarget === columnState && canDrop;
 
                     return (
                         <section
                             key={columnState}
-                            className={`jobColumn ${columnState}`}
+                            className={[
+                                'jobColumn',
+                                columnState,
+                                canDrop ? 'isDroppable' : '',
+                                isDropTarget ? 'isDropTarget' : '',
+                                activeDragJob !== null && !canDrop ? 'isDropBlocked' : '',
+                            ].filter(Boolean).join(' ')}
                             aria-labelledby={titleId}
+                            onDragOver={(event) => {
+                                const job = getDraggingJob();
+                                if (job === null || !canSetJobState(job.state, columnState)) {
+                                    return;
+                                }
+
+                                event.preventDefault();
+                                event.dataTransfer.dropEffect = 'move';
+                                setDropTarget(columnState);
+                            }}
+                            onDragLeave={(event) => {
+                                const nextTarget = event.relatedTarget;
+                                if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) {
+                                    return;
+                                }
+
+                                setDropTarget((current) => (current === columnState ? null : current));
+                            }}
+                            onDrop={(event) => {
+                                event.preventDefault();
+                                const job = getDraggingJob();
+                                const jobId = Number(event.dataTransfer.getData(JOB_DRAG_TYPE));
+
+                                if (
+                                    job !== null
+                                    && job.id === jobId
+                                    && canSetJobState(job.state, columnState)
+                                ) {
+                                    moveJobToColumn(jobId, columnState);
+                                }
+
+                                clearDragState();
+                            }}
                         >
                             <h3 id={titleId} className="jobColumnTitle">
                                 {JobItemState[columnState]}
@@ -251,13 +360,9 @@ export const JobList = ({ filter }: JobListProps) => {
                                         onOpen={setViewingJobId}
                                         onEdit={setEditingJobId}
                                         onDelete={setPendingDeleteId}
-                                        onSetState={(id, nextState) => dispatch({
-                                            type: 'SET_STATE',
-                                            payload: {
-                                                id,
-                                                state: nextState,
-                                            },
-                                        })}
+                                        onSetState={(id, nextState) => moveJobToColumn(id, nextState)}
+                                        onDragStart={beginDrag}
+                                        onDragEnd={clearDragState}
                                     />
                                 ))}
                             </ul>

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { JobProvider } from '../../context/JobProvider';
@@ -6,6 +6,32 @@ import { JobList } from './JobList';
 import { todayDateInputValue } from './jobDates';
 
 const STORAGE_KEY = 'job_app_items';
+
+const createDataTransfer = () => {
+    const store: Record<string, string> = {};
+
+    return {
+        effectAllowed: 'all' as string,
+        dropEffect: 'move' as string,
+        setData: (format: string, value: string) => {
+            store[format] = value;
+        },
+        getData: (format: string) => store[format] ?? '',
+    };
+};
+
+const dragJobToColumn = (jobName: string, columnName: string) => {
+    const dataTransfer = createDataTransfer();
+    const jobItem = screen.getByText(jobName).closest('.jobItem');
+    const column = screen.getByRole('region', { name: columnName });
+
+    expect(jobItem).not.toBeNull();
+
+    fireEvent.dragStart(jobItem!, { dataTransfer });
+    fireEvent.dragOver(column, { dataTransfer });
+    fireEvent.drop(column, { dataTransfer });
+    fireEvent.dragEnd(jobItem!, { dataTransfer });
+};
 
 const renderJobList = () => render(
     <JobProvider>
@@ -596,5 +622,94 @@ describe('JobList', () => {
         await user.click(screen.getByRole('button', { name: 'Delete Acme' }));
         expect(screen.getByRole('alertdialog')).toBeInTheDocument();
         expect(screen.queryByRole('dialog', { name: 'Acme' })).not.toBeInTheDocument();
+    });
+
+    it('moves a job to another column by drag and drop when the transition is allowed', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+        ]));
+
+        renderJobList();
+
+        dragJobToColumn('Acme', 'Applied');
+
+        expect(within(screen.getByRole('region', { name: 'Applied' })).getByText('Acme')).toBeInTheDocument();
+        expect(within(screen.getByRole('region', { name: 'New' })).queryByText('Acme')).not.toBeInTheDocument();
+        expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')[0]).toMatchObject({
+            state: 'applied',
+        });
+        expect(screen.getByRole('img', { name: `Open 2026-09-01 · Applied ${todayDateInputValue()}` })).toBeInTheDocument();
+    });
+
+    it('does not move a job when the state transition is not allowed', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+        ]));
+
+        renderJobList();
+
+        dragJobToColumn('Acme', 'Accepted');
+
+        expect(within(screen.getByRole('region', { name: 'New' })).getByText('Acme')).toBeInTheDocument();
+        expect(within(screen.getByRole('region', { name: 'Accepted' })).queryByText('Acme')).not.toBeInTheDocument();
+        expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')[0]).toMatchObject({
+            state: 'new',
+        });
+    });
+
+    it('does not allow dragging a rejected job', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: '2026-09-09T00:00:00',
+                state: 'rejected',
+            },
+        ]));
+
+        renderJobList();
+
+        expect(screen.getByText('Acme').closest('.jobItem')).toHaveAttribute('draggable', 'false');
+    });
+
+    it('opens the details popup on the next click after a drag', async () => {
+        const user = userEvent.setup();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+        ]));
+
+        renderJobList();
+
+        dragJobToColumn('Acme', 'Accepted');
+        await user.click(screen.getByText('Acme'));
+
+        expect(screen.getByRole('dialog', { name: 'Acme' })).toBeInTheDocument();
     });
 });
