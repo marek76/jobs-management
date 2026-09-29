@@ -1,6 +1,13 @@
 .jobApp {
     width: min(1200px, 100%);
+    max-width: 100%;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .jobAppHeader {
@@ -8,6 +15,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    flex-shrink: 0;
 }
 
 .jobAppHeader h2 {

@@ -2,17 +2,27 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
-    align-items: start;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .jobColumn {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
 }
 
 .jobColumnTitle {
     margin: 0 0 0.5rem;
     font-size: 1rem;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 .jobColumn.new .jobColumnTitle {
@@ -35,7 +45,38 @@
     list-style: none;
     width: 100%;
     margin: 0;
-    padding: 0;
+    padding: 0 0.15rem 0 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.jobList::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+}
+
+.jobList::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 999px;
+    margin: 0.25rem 0;
+}
+
+.jobList::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    min-height: 2rem;
+}
+
+.jobList::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 
 .jobItem {
@@ -117,6 +158,16 @@
     right: 0;
     display: flex;
     align-items: center;
+    padding: 0.1rem;
+    border-radius: 0.35rem;
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.jobItemHovered .jobItemActions {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .jobEdit,
@@ -128,14 +179,7 @@
     background: transparent;
     padding: 0.25rem;
     cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.jobItemHovered .jobEdit,
-.jobItemHovered .jobDelete {
-    opacity: 0.7;
-    pointer-events: auto;
+    opacity: 0.85;
 }
 
 .jobEdit {
@@ -149,6 +193,8 @@
 .jobItemHovered .jobEdit:hover,
 .jobItemHovered .jobDelete:hover {
     opacity: 1;
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    border-radius: 0.25rem;
 }
 
 .jobEdit:hover {
