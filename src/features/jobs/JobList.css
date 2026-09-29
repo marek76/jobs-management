@@ -18,6 +18,19 @@
     overflow: hidden;
 }
 
+.jobColumn.isDroppable {
+    outline: 1px dashed color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.jobColumn.isDropTarget {
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+    outline: 2px solid color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.jobColumn.isDropBlocked {
+    opacity: 0.72;
+}
+
 .jobColumnTitle {
     margin: 0 0 0.5rem;
     font-size: 1rem;
@@ -86,6 +99,15 @@
     box-sizing: border-box;
     padding: 0.75rem 0;
     color: #000;
+    cursor: pointer;
+}
+
+.jobItem.isDraggable {
+    cursor: grab;
+}
+
+.jobItem.isDraggable:active {
+    cursor: grabbing;
 }
 
 @media (prefers-color-scheme: dark) {
