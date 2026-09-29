@@ -47,13 +47,45 @@ const TrashIcon = () => (
     </svg>
 );
 
+const LinkIcon = () => (
+    <svg
+        className="jobLinkIcon"
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+        focusable="false"
+    >
+        <path
+            fill="currentColor"
+            d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
+        />
+    </svg>
+);
+
+const CalendarIcon = () => (
+    <svg
+        className="jobCalendarIcon"
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+        focusable="false"
+    >
+        <path
+            fill="currentColor"
+            d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"
+        />
+    </svg>
+);
+
 const formatJobDate = (date: Date): string => toDateInputValue(date);
 
 const formatJobDates = (job: JobItem): string => {
     const parts = [`Open ${formatJobDate(job.openDate)}`];
 
     if (job.submissionDate !== null) {
-        parts.push(`Submit ${formatJobDate(job.submissionDate)}`);
+        parts.push(`Applied ${formatJobDate(job.submissionDate)}`);
     }
 
     return parts.join(' · ');
@@ -66,52 +98,74 @@ type JobListItemProps = {
     onSetState: (id: number, state: JobItemStateKey) => void;
 };
 
-const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) => (
-    <li className={`jobItem ${job.state}`}>
-        <div className="jobItemContent">
-            <p className="jobItemCompany">{job.companyName}</p>
-            <p className="jobItemPosition">{job.position}</p>
-            {job.description ? (
-                <p className="jobItemDescription">{job.description}</p>
-            ) : null}
-            {job.link ? (
-                <a
-                    className="jobItemLink"
-                    href={job.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    {job.link}
-                </a>
-            ) : null}
-            <p className="jobItemMeta">
-                {formatJobDates(job)}
-                {' · '}
-                <JobStateSelect
-                    companyName={job.companyName}
-                    state={job.state}
-                    onSelect={(nextState) => onSetState(job.id, nextState)}
-                />
-            </p>
-        </div>
-        <button
-            type="button"
-            className="jobEdit"
-            aria-label={`Edit ${job.companyName}`}
-            onClick={() => onEdit(job.id)}
+const JobListItem = ({ job, onEdit, onDelete, onSetState }: JobListItemProps) => {
+    const [hovered, setHovered] = useState(false);
+    const datesLabel = formatJobDates(job);
+    const link = job.link.trim();
+
+    return (
+        <li
+            className={`jobItem ${job.state}${hovered ? ' jobItemHovered' : ''}`}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onFocus={() => setHovered(true)}
+            onBlur={(event) => {
+                const nextTarget = event.relatedTarget;
+                if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+                    setHovered(false);
+                }
+            }}
         >
-            <EditIcon />
-        </button>
-        <button
-            type="button"
-            className="jobDelete"
-            aria-label={`Delete ${job.companyName}`}
-            onClick={() => onDelete(job.id)}
-        >
-            <TrashIcon />
-        </button>
-    </li>
-);
+            <div className="jobItemContent">
+                <p className="jobItemCompany">{job.companyName}</p>
+                <p className="jobItemPosition">{job.position}</p>
+                <div className="jobItemMeta">
+                    {link ? (
+                        <a
+                            className="jobItemLink"
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Open job link"
+                            title={link}
+                        >
+                            <LinkIcon />
+                        </a>
+                    ) : null}
+                    <span
+                        className="jobCalendar"
+                        role="img"
+                        title={datesLabel}
+                        aria-label={datesLabel}
+                    >
+                        <CalendarIcon />
+                    </span>
+                    <JobStateSelect
+                        companyName={job.companyName}
+                        state={job.state}
+                        onSelect={(nextState) => onSetState(job.id, nextState)}
+                    />
+                </div>
+            </div>
+            <button
+                type="button"
+                className="jobEdit"
+                aria-label={`Edit ${job.companyName}`}
+                onClick={() => onEdit(job.id)}
+            >
+                <EditIcon />
+            </button>
+            <button
+                type="button"
+                className="jobDelete"
+                aria-label={`Delete ${job.companyName}`}
+                onClick={() => onDelete(job.id)}
+            >
+                <TrashIcon />
+            </button>
+        </li>
+    );
+};
 
 export const JobList = ({ filter }: JobListProps) => {
     const { state, dispatch } = useStore();

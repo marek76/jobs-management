@@ -149,7 +149,7 @@ describe('JobList', () => {
         expect(screen.queryByRole('region', { name: 'Rejected' })).not.toBeInTheDocument();
     });
 
-    it('hides submission date when it is missing', () => {
+    it('shows open date only in the calendar tooltip when the applied date is missing', () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify([
             {
                 id: 1,
@@ -166,11 +166,12 @@ describe('JobList', () => {
 
         expect(screen.getByText('Acme')).toBeInTheDocument();
         expect(screen.getByText('Frontend developer')).toBeInTheDocument();
-        expect(screen.getByText(/Open /)).toBeInTheDocument();
-        expect(screen.queryByText(/Submit /)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Open /)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Applied \d/)).not.toBeInTheDocument();
+        expect(screen.getByRole('img', { name: 'Open 2026-09-01' })).toHaveAttribute('title', 'Open 2026-09-01');
     });
 
-    it('shows submission date when it is present', () => {
+    it('shows the applied date in the calendar tooltip when it is present', () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify([
             {
                 id: 1,
@@ -185,7 +186,10 @@ describe('JobList', () => {
 
         renderJobList();
 
-        expect(screen.getByText(/Submit /)).toBeInTheDocument();
+        const calendar = screen.getByRole('img', { name: 'Open 2026-09-01 · Applied 2026-09-09' });
+        expect(calendar).toHaveAttribute('title', 'Open 2026-09-01 · Applied 2026-09-09');
+        expect(screen.queryByText(/Open 2026-09-01/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Applied 2026-09-09/)).not.toBeInTheDocument();
     });
 
     it('changes a new job to applied and sets the submission date to today', async () => {
@@ -208,7 +212,11 @@ describe('JobList', () => {
         await user.click(screen.getByRole('menuitem', { name: 'Applied' }));
 
         expect(screen.getByRole('button', { name: 'Set status of Acme' })).toHaveTextContent('Applied');
-        expect(screen.getByText(new RegExp(`Submit ${todayDateInputValue()}`))).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: `Open 2026-09-01 · Applied ${todayDateInputValue()}` })).toHaveAttribute(
+            'title',
+            `Open 2026-09-01 · Applied ${todayDateInputValue()}`,
+        );
+        expect(screen.queryByText(new RegExp(`Applied ${todayDateInputValue()}`))).not.toBeInTheDocument();
         expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')[0]).toMatchObject({
             state: 'applied',
         });
@@ -299,7 +307,7 @@ describe('JobList', () => {
                 id: 1,
                 companyName: 'Acme',
                 position: 'Frontend developer',
-                description: '',
+                description: 'Great team',
                 link: 'https://example.com/jobs/acme',
                 openDate: '2026-09-01T00:00:00',
                 submissionDate: null,
@@ -309,10 +317,17 @@ describe('JobList', () => {
 
         renderJobList();
 
-        const link = screen.getByRole('link', { name: 'https://example.com/jobs/acme' });
+        const link = screen.getByRole('link', { name: 'Open job link' });
+        const calendar = screen.getByRole('img', { name: /Open / });
+        const status = screen.getByRole('button', { name: 'Set status of Acme' });
+
         expect(link).toHaveAttribute('href', 'https://example.com/jobs/acme');
         expect(link).toHaveAttribute('target', '_blank');
         expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+        expect(screen.queryByText('https://example.com/jobs/acme')).not.toBeInTheDocument();
+        expect(screen.queryByText('Great team')).not.toBeInTheDocument();
+        expect(link.compareDocumentPosition(calendar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(calendar.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it('hides the job link when it is empty', () => {
@@ -332,5 +347,37 @@ describe('JobList', () => {
         renderJobList();
 
         expect(screen.queryByRole('link')).not.toBeInTheDocument();
+        expect(screen.getByRole('img', { name: /Open / })).toBeInTheDocument();
+    });
+
+    it('hides edit and delete until the job item is hovered', async () => {
+        const user = userEvent.setup();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+        ]));
+
+        renderJobList();
+
+        const edit = screen.getByRole('button', { name: 'Edit Acme' });
+        const item = edit.closest('.jobItem');
+
+        expect(screen.getByRole('button', { name: 'Delete Acme' })).toBeInTheDocument();
+        expect(item).not.toHaveClass('jobItemHovered');
+
+        await user.hover(screen.getByText('Acme'));
+
+        expect(item).toHaveClass('jobItemHovered');
+
+        await user.unhover(screen.getByText('Acme'));
+
+        expect(item).not.toHaveClass('jobItemHovered');
     });
 });

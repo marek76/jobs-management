@@ -135,7 +135,7 @@ export const AddJobDialog = ({ onCancel, onAdd }: AddJobDialogProps) => {
                         required
                     />
 
-                    <label htmlFor="add-job-submission-date">Submission date</label>
+                    <label htmlFor="add-job-submission-date">Applied</label>
                     <input
                         id="add-job-submission-date"
                         name="submissionDate"

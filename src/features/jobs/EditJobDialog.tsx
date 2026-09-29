@@ -136,7 +136,7 @@ export const EditJobDialog = ({ job, onCancel, onUpdate }: EditJobDialogProps) =
                         required
                     />
 
-                    <label htmlFor="edit-job-submission-date">Submission date</label>
+                    <label htmlFor="edit-job-submission-date">Applied</label>
                     <input
                         id="edit-job-submission-date"
                         name="submissionDate"

@@ -89,25 +89,24 @@
     margin: 0.15rem 0 0;
 }
 
-.jobItemDescription {
-    margin: 0.25rem 0 0;
-    font-size: 0.85em;
-    opacity: 0.85;
-    white-space: pre-wrap;
+.jobItemMeta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.35rem 0 0;
+}
+
+.jobItemLink,
+.jobCalendar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    line-height: 0;
 }
 
 .jobItemLink {
-    display: inline-block;
-    margin: 0.25rem 0 0;
-    font-size: 0.85em;
-    color: inherit;
-    word-break: break-all;
-}
-
-.jobItemMeta {
-    margin: 0.25rem 0 0;
-    font-size: 0.8em;
-    opacity: 0.8;
+    text-decoration: none;
 }
 
 .jobEdit,
@@ -120,6 +119,11 @@
     background: transparent;
     padding: 0.25rem;
     cursor: pointer;
+    opacity: 0;
+}
+
+.jobItemHovered .jobEdit,
+.jobItemHovered .jobDelete {
     opacity: 0.7;
 }
 
@@ -131,8 +135,8 @@
     color: #c0392b;
 }
 
-.jobEdit:hover,
-.jobDelete:hover {
+.jobItemHovered .jobEdit:hover,
+.jobItemHovered .jobDelete:hover {
     opacity: 1;
 }
 

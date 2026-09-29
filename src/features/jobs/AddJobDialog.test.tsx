@@ -28,7 +28,7 @@ describe('AddJobDialog', () => {
         expect(screen.getByLabelText('Description')).toBeInTheDocument();
         expect(screen.getByLabelText('Link')).toBeInTheDocument();
         expect(screen.getByLabelText('Open date')).toBeInTheDocument();
-        expect(screen.getByLabelText('Submission date')).toBeInTheDocument();
+        expect(screen.getByLabelText('Applied')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
     });
@@ -40,7 +40,7 @@ describe('AddJobDialog', () => {
         render(<AddJobDialog onCancel={vi.fn()} onAdd={vi.fn()} />);
 
         expect(screen.getByLabelText('Open date')).toHaveValue('2026-09-09');
-        expect(screen.getByLabelText('Submission date')).toHaveValue('');
+        expect(screen.getByLabelText('Applied')).toHaveValue('');
     });
 
     it('calls onCancel when Cancel is clicked', async () => {
@@ -112,7 +112,7 @@ describe('AddJobDialog', () => {
         const user = await fillRequiredFields();
         await user.type(screen.getByLabelText('Description'), '  Remote role  ');
         await user.type(screen.getByLabelText('Link'), '  https://example.com/jobs/1  ');
-        fireEvent.change(screen.getByLabelText('Submission date'), { target: { value: '2026-09-09' } });
+        fireEvent.change(screen.getByLabelText('Applied'), { target: { value: '2026-09-09' } });
         await user.click(screen.getByRole('button', { name: 'Add' }));
 
         expect(onAdd).toHaveBeenCalledOnce();
