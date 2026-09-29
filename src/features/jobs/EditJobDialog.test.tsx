@@ -29,7 +29,7 @@ describe('EditJobDialog', () => {
         expect(screen.getByLabelText('Description')).toHaveValue('Remote role');
         expect(screen.getByLabelText('Link')).toHaveValue('https://example.com/jobs/acme');
         expect(screen.getByLabelText('Open date')).toHaveValue('2026-09-01');
-        expect(screen.getByLabelText('Submission date')).toHaveValue('2026-09-09');
+        expect(screen.getByLabelText('Applied')).toHaveValue('2026-09-09');
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Update' })).toBeInTheDocument();
     });
@@ -43,7 +43,7 @@ describe('EditJobDialog', () => {
             />,
         );
 
-        expect(screen.getByLabelText('Submission date')).toHaveValue('');
+        expect(screen.getByLabelText('Applied')).toHaveValue('');
     });
 
     it('does not call onUpdate when required fields are empty', async () => {
@@ -74,7 +74,7 @@ describe('EditJobDialog', () => {
         await user.clear(screen.getByLabelText('Link'));
         await user.type(screen.getByLabelText('Link'), '  https://example.com/jobs/2  ');
         fireEvent.change(screen.getByLabelText('Open date'), { target: { value: '2026-10-01' } });
-        fireEvent.change(screen.getByLabelText('Submission date'), { target: { value: '2026-10-15' } });
+        fireEvent.change(screen.getByLabelText('Applied'), { target: { value: '2026-10-15' } });
         await user.click(screen.getByRole('button', { name: 'Update' }));
 
         expect(onUpdate).toHaveBeenCalledOnce();
@@ -96,7 +96,7 @@ describe('EditJobDialog', () => {
 
         await user.clear(screen.getByLabelText('Description'));
         await user.clear(screen.getByLabelText('Link'));
-        fireEvent.change(screen.getByLabelText('Submission date'), { target: { value: '' } });
+        fireEvent.change(screen.getByLabelText('Applied'), { target: { value: '' } });
         await user.click(screen.getByRole('button', { name: 'Update' }));
 
         expect(onUpdate).toHaveBeenCalledOnce();

@@ -2,17 +2,27 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
-    align-items: start;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .jobColumn {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
 }
 
 .jobColumnTitle {
     margin: 0 0 0.5rem;
     font-size: 1rem;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 .jobColumn.new .jobColumnTitle {
@@ -33,14 +43,47 @@
 
 .jobList {
     list-style: none;
+    width: 100%;
     margin: 0;
-    padding: 0;
+    padding: 0 0.15rem 0 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.jobList::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+}
+
+.jobList::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 999px;
+    margin: 0.25rem 0;
+}
+
+.jobList::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    min-height: 2rem;
+}
+
+.jobList::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 
 .jobItem {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
+    position: relative;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
     padding: 0.75rem 0;
     color: #000;
 }
@@ -56,7 +99,7 @@
 }
 
 .jobItemContent {
-    flex: 1;
+    width: 100%;
     min-width: 0;
 }
 
@@ -89,30 +132,46 @@
     margin: 0.15rem 0 0;
 }
 
-.jobItemDescription {
-    margin: 0.25rem 0 0;
-    font-size: 0.85em;
-    opacity: 0.85;
-    white-space: pre-wrap;
+.jobItemMeta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.35rem 0 0;
+}
+
+.jobItemLink,
+.jobCalendar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    line-height: 0;
 }
 
 .jobItemLink {
-    display: inline-block;
-    margin: 0.25rem 0 0;
-    font-size: 0.85em;
-    color: inherit;
-    word-break: break-all;
+    text-decoration: none;
 }
 
-.jobItemMeta {
-    margin: 0.25rem 0 0;
-    font-size: 0.8em;
-    opacity: 0.8;
+.jobItemActions {
+    position: absolute;
+    top: 0.4rem;
+    right: 0;
+    display: flex;
+    align-items: center;
+    padding: 0.1rem;
+    border-radius: 0.35rem;
+    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.jobItemHovered .jobItemActions {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .jobEdit,
 .jobDelete {
-    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -120,7 +179,7 @@
     background: transparent;
     padding: 0.25rem;
     cursor: pointer;
-    opacity: 0.7;
+    opacity: 0.85;
 }
 
 .jobEdit {
@@ -131,9 +190,11 @@
     color: #c0392b;
 }
 
-.jobEdit:hover,
-.jobDelete:hover {
+.jobItemHovered .jobEdit:hover,
+.jobItemHovered .jobDelete:hover {
     opacity: 1;
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    border-radius: 0.25rem;
 }
 
 .jobEdit:hover {

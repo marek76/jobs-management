@@ -20,7 +20,7 @@ const fillRequiredFields = async () => {
     await user.type(screen.getByLabelText('Position'), 'Backend developer');
     await user.type(screen.getByLabelText('Description'), 'Remote role');
     fireEvent.change(screen.getByLabelText('Open date'), { target: { value: '2026-09-01' } });
-    fireEvent.change(screen.getByLabelText('Submission date'), { target: { value: '2026-09-09' } });
+    fireEvent.change(screen.getByLabelText('Applied'), { target: { value: '2026-09-09' } });
 
     return user;
 };
