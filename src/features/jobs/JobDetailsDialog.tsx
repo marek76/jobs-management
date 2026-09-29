@@ -30,7 +30,9 @@ export const JobDetailsDialog = ({ job, onClose, onEdit, onDelete, onSetState }:
                 aria-labelledby="job-details-title"
                 onClick={(event) => event.stopPropagation()}
             >
-                <h3 id="job-details-title">{job.companyName}</h3>
+                <h3 id="job-details-title" className={`jobDetailsTitle ${job.state}`}>
+                    {job.companyName}
+                </h3>
                 <dl>
                     <dt>Company</dt>
                     <dd>{job.companyName}</dd>

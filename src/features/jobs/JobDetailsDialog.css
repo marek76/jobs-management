@@ -20,6 +20,22 @@
     margin: 0 0 1rem;
 }
 
+.jobDetailsTitle.new {
+    color: lightblue;
+}
+
+.jobDetailsTitle.applied {
+    color: yellow;
+}
+
+.jobDetailsTitle.accepted {
+    color: green;
+}
+
+.jobDetailsTitle.rejected {
+    color: #c0392b;
+}
+
 .jobDetailsDialog dl {
     display: grid;
     grid-template-columns: 8rem 1fr;

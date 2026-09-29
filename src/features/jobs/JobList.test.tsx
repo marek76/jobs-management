@@ -405,6 +405,7 @@ describe('JobList', () => {
         await user.click(screen.getByText('Acme'));
 
         const dialog = screen.getByRole('dialog', { name: 'Acme' });
+        expect(within(dialog).getByRole('heading', { name: 'Acme' })).toHaveClass('applied');
         expect(within(dialog).getByText('Frontend developer')).toBeInTheDocument();
         expect(within(dialog).getByText('Great team')).toBeInTheDocument();
         expect(within(dialog).getByText('Open date')).toBeInTheDocument();
@@ -440,10 +441,15 @@ describe('JobList', () => {
         await user.click(screen.getByText('Acme'));
 
         const dialog = screen.getByRole('dialog', { name: 'Acme' });
+        const title = within(dialog).getByRole('heading', { name: 'Acme' });
+        expect(title).toHaveClass('new');
+
         await user.click(within(dialog).getByRole('button', { name: 'Set status of Acme' }));
         await user.click(screen.getByRole('menuitem', { name: 'Applied' }));
 
         expect(screen.getByRole('dialog', { name: 'Acme' })).toBeInTheDocument();
+        expect(title).toHaveClass('applied');
+        expect(title).not.toHaveClass('new');
         expect(within(dialog).getByRole('button', { name: 'Set status of Acme' })).toHaveTextContent('Applied');
         expect(within(dialog).getByText(todayDateInputValue())).toBeInTheDocument();
         expect(within(screen.getByRole('region', { name: 'Applied' })).getByText('Acme')).toBeInTheDocument();
@@ -454,6 +460,7 @@ describe('JobList', () => {
         await user.click(screen.getByRole('menuitem', { name: 'Rejected' }));
 
         expect(within(dialog).queryByRole('button', { name: 'Set status of Acme' })).not.toBeInTheDocument();
+        expect(title).toHaveClass('rejected');
         expect(within(dialog).getByText('Rejected')).toBeInTheDocument();
         expect(within(screen.getByRole('region', { name: 'Rejected' })).getByText('Acme')).toBeInTheDocument();
     });
