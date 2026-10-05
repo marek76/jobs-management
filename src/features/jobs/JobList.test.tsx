@@ -909,13 +909,13 @@ describe('JobList', () => {
         renderJobList();
 
         const appliedColumn = screen.getByRole('region', { name: 'Applied' });
-        const sort = within(appliedColumn).getByRole('combobox', { name: 'Sort' });
-        expect(sort).toHaveValue('oldest');
-        expect(within(sort).getByRole('option', { name: 'from oldest' })).toBeInTheDocument();
-        expect(within(sort).getByRole('option', { name: 'from newest' })).toBeInTheDocument();
-        expect(within(screen.getByRole('region', { name: 'New' })).queryByRole('combobox', { name: 'Sort' })).not.toBeInTheDocument();
+        const oldest = within(appliedColumn).getByRole('button', { name: 'Sort from oldest' });
+        const newest = within(appliedColumn).getByRole('button', { name: 'Sort from newest' });
+        expect(oldest).toHaveAttribute('aria-pressed', 'true');
+        expect(newest).toHaveAttribute('aria-pressed', 'false');
+        expect(within(screen.getByRole('region', { name: 'New' })).queryByRole('button', { name: 'Sort from oldest' })).not.toBeInTheDocument();
 
-        await user.selectOptions(sort, 'newest');
+        await user.click(newest);
 
         const companyOrder = (columnName: string) => within(screen.getByRole('region', { name: columnName }))
             .getAllByRole('listitem')

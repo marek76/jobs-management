@@ -48,21 +48,25 @@
 }
 
 .jobColumnSort {
+    margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.8rem;
-    font-weight: 500;
+    gap: 0.1rem;
     flex-shrink: 0;
 }
 
-.jobColumnSort select {
-    font: inherit;
+.jobColumnSort button {
+    display: inline-flex;
+    border: 0;
+    background: transparent;
     color: var(--text-h);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0.15rem 0.25rem;
+    padding: 0.1rem;
+    cursor: pointer;
+    opacity: 0.4;
+}
+
+.jobColumnSort button[aria-pressed='true'] {
+    opacity: 1;
 }
 
 .jobColumn.new .jobColumnTitle {

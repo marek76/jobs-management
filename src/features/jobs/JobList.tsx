@@ -37,6 +37,44 @@ const jobsInColumn = (
     );
 };
 
+const SortOldestIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+        focusable="false"
+    >
+        <path
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 19V5M6 11l6-6 6 6"
+        />
+    </svg>
+);
+
+const SortNewestIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+        focusable="false"
+    >
+        <path
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 5v14M6 13l6 6 6-6"
+        />
+    </svg>
+);
+
 const EditIcon = () => (
     <svg
         className="jobEditIcon"
@@ -374,18 +412,26 @@ export const JobList = ({ filter }: JobListProps) => {
                                     {JobItemState[columnState]}
                                 </h3>
                                 {columnState === 'applied' ? (
-                                    <label className="jobColumnSort">
-                                        Sort
-                                        <select
-                                            value={appliedSort}
-                                            onChange={(event) => {
-                                                setAppliedSort(event.target.value as AppliedOpenDateSort);
-                                            }}
+                                    <div className="jobColumnSort">
+                                        <button
+                                            type="button"
+                                            aria-label="Sort from oldest"
+                                            title="Sort from oldest"
+                                            aria-pressed={appliedSort === 'oldest'}
+                                            onClick={() => setAppliedSort('oldest')}
                                         >
-                                            <option value="oldest">from oldest</option>
-                                            <option value="newest">from newest</option>
-                                        </select>
-                                    </label>
+                                            <SortOldestIcon />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-label="Sort from newest"
+                                            title="Sort from newest"
+                                            aria-pressed={appliedSort === 'newest'}
+                                            onClick={() => setAppliedSort('newest')}
+                                        >
+                                            <SortNewestIcon />
+                                        </button>
+                                    </div>
                                 ) : null}
                             </div>
                             <ul className="jobList">
