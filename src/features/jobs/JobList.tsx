@@ -18,6 +18,63 @@ type JobListProps = {
 const JOB_COLUMNS = Object.keys(JobItemState) as JobItemStateKey[];
 const JOB_DRAG_TYPE = 'application/x-job-id';
 
+type AppliedOpenDateSort = 'oldest' | 'newest';
+
+const jobsInColumn = (
+    jobs: JobItem[],
+    columnState: JobItemStateKey,
+    appliedSort: AppliedOpenDateSort,
+): JobItem[] => {
+    const columnJobs = jobs.filter((job) => job.state === columnState);
+    if (columnState !== 'applied') {
+        return columnJobs;
+    }
+
+    const direction = appliedSort === 'newest' ? -1 : 1;
+
+    return [...columnJobs].sort(
+        (left, right) => (left.openDate.getTime() - right.openDate.getTime()) * direction,
+    );
+};
+
+const SortOldestIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+        focusable="false"
+    >
+        <path
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 19V5M6 11l6-6 6 6"
+        />
+    </svg>
+);
+
+const SortNewestIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+        focusable="false"
+    >
+        <path
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 5v14M6 13l6 6 6-6"
+        />
+    </svg>
+);
+
 const EditIcon = () => (
     <svg
         className="jobEditIcon"
@@ -227,6 +284,7 @@ export const JobList = ({ filter }: JobListProps) => {
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const [editingJobId, setEditingJobId] = useState<number | null>(null);
     const [viewingJobId, setViewingJobId] = useState<number | null>(null);
+    const [appliedSort, setAppliedSort] = useState<AppliedOpenDateSort>('oldest');
     const [draggingJob, setDraggingJob] = useState<JobItem | null>(null);
     const [dropTarget, setDropTarget] = useState<JobItemStateKey | null>(null);
     const draggingJobRef = useRef<JobItem | null>(null);
@@ -297,7 +355,7 @@ export const JobList = ({ filter }: JobListProps) => {
                         return null;
                     }
 
-                    const columnJobs = jobs.filter((job) => job.state === columnState);
+                    const columnJobs = jobsInColumn(jobs, columnState, appliedSort);
                     const titleId = `job-column-${columnState}`;
                     const activeDragJob = draggingJob;
                     const canDrop = activeDragJob !== null
@@ -349,9 +407,33 @@ export const JobList = ({ filter }: JobListProps) => {
                                 clearDragState();
                             }}
                         >
-                            <h3 id={titleId} className="jobColumnTitle">
-                                {JobItemState[columnState]}
-                            </h3>
+                            <div className="jobColumnHeader">
+                                <h3 id={titleId} className="jobColumnTitle">
+                                    {JobItemState[columnState]}
+                                </h3>
+                                {columnState === 'applied' ? (
+                                    <div className="jobColumnSort">
+                                        <button
+                                            type="button"
+                                            aria-label="Sort from oldest"
+                                            title="Sort from oldest"
+                                            aria-pressed={appliedSort === 'oldest'}
+                                            onClick={() => setAppliedSort('oldest')}
+                                        >
+                                            <SortOldestIcon />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-label="Sort from newest"
+                                            title="Sort from newest"
+                                            aria-pressed={appliedSort === 'newest'}
+                                            onClick={() => setAppliedSort('newest')}
+                                        >
+                                            <SortNewestIcon />
+                                        </button>
+                                    </div>
+                                ) : null}
+                            </div>
                             <ul className="jobList">
                                 {columnJobs.map((job) => (
                                     <JobListItem

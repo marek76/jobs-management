@@ -712,4 +712,216 @@ describe('JobList', () => {
 
         expect(screen.getByRole('dialog', { name: 'Acme' })).toBeInTheDocument();
     });
+
+    it('sorts the Applied column by open date, earliest first, and leaves other columns in stored order', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Newer New',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-15T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+            {
+                id: 2,
+                companyName: 'Older New',
+                position: 'Backend developer',
+                description: '',
+                openDate: '2026-09-02T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+            {
+                id: 3,
+                companyName: 'Zeta',
+                position: 'QA engineer',
+                description: '',
+                openDate: '2026-09-20T00:00:00',
+                submissionDate: '2026-09-21T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 4,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: '2026-09-03T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 5,
+                companyName: 'Midway',
+                position: 'Full stack developer',
+                description: '',
+                openDate: '2026-09-10T00:00:00',
+                submissionDate: '2026-09-11T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 6,
+                companyName: 'Later Accepted',
+                position: 'Designer',
+                description: '',
+                openDate: '2026-09-18T00:00:00',
+                submissionDate: '2026-09-19T00:00:00',
+                state: 'accepted',
+            },
+            {
+                id: 7,
+                companyName: 'Earlier Accepted',
+                position: 'Designer',
+                description: '',
+                openDate: '2026-09-04T00:00:00',
+                submissionDate: '2026-09-05T00:00:00',
+                state: 'accepted',
+            },
+        ]));
+
+        renderJobList();
+
+        const companyOrder = (columnName: string) => within(screen.getByRole('region', { name: columnName }))
+            .getAllByRole('listitem')
+            .map((item) => item.querySelector('.jobItemCompany')?.textContent);
+
+        expect(companyOrder('Applied')).toEqual(['Acme', 'Midway', 'Zeta']);
+        expect(companyOrder('New')).toEqual(['Newer New', 'Older New']);
+        expect(companyOrder('Accepted')).toEqual(['Later Accepted', 'Earlier Accepted']);
+    });
+
+    it('keeps Applied jobs with the same open date in their stored order', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Second',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: '2026-09-02T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 2,
+                companyName: 'First',
+                position: 'Backend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: '2026-09-03T00:00:00',
+                state: 'applied',
+            },
+        ]));
+
+        renderJobList();
+
+        const order = within(screen.getByRole('region', { name: 'Applied' }))
+            .getAllByRole('listitem')
+            .map((item) => item.querySelector('.jobItemCompany')?.textContent);
+
+        expect(order).toEqual(['Second', 'First']);
+    });
+
+    it('places a job dropped on Applied according to its open date', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+            {
+                id: 2,
+                companyName: 'Zeta',
+                position: 'QA engineer',
+                description: '',
+                openDate: '2026-09-20T00:00:00',
+                submissionDate: '2026-09-21T00:00:00',
+                state: 'applied',
+            },
+        ]));
+
+        renderJobList();
+
+        dragJobToColumn('Acme', 'Applied');
+
+        const order = within(screen.getByRole('region', { name: 'Applied' }))
+            .getAllByRole('listitem')
+            .map((item) => item.querySelector('.jobItemCompany')?.textContent);
+
+        expect(order).toEqual(['Acme', 'Zeta']);
+        expect(within(screen.getByRole('region', { name: 'New' })).queryByText('Acme')).not.toBeInTheDocument();
+    });
+
+    it('sorts the Applied column from newest when that option is selected', async () => {
+        const user = userEvent.setup();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Newer New',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-15T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+            {
+                id: 2,
+                companyName: 'Older New',
+                position: 'Backend developer',
+                description: '',
+                openDate: '2026-09-02T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+            {
+                id: 3,
+                companyName: 'Zeta',
+                position: 'QA engineer',
+                description: '',
+                openDate: '2026-09-20T00:00:00',
+                submissionDate: '2026-09-21T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 4,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: '2026-09-03T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 5,
+                companyName: 'Midway',
+                position: 'Full stack developer',
+                description: '',
+                openDate: '2026-09-10T00:00:00',
+                submissionDate: '2026-09-11T00:00:00',
+                state: 'applied',
+            },
+        ]));
+
+        renderJobList();
+
+        const appliedColumn = screen.getByRole('region', { name: 'Applied' });
+        const oldest = within(appliedColumn).getByRole('button', { name: 'Sort from oldest' });
+        const newest = within(appliedColumn).getByRole('button', { name: 'Sort from newest' });
+        expect(oldest).toHaveAttribute('aria-pressed', 'true');
+        expect(newest).toHaveAttribute('aria-pressed', 'false');
+        expect(within(screen.getByRole('region', { name: 'New' })).queryByRole('button', { name: 'Sort from oldest' })).not.toBeInTheDocument();
+
+        await user.click(newest);
+
+        const companyOrder = (columnName: string) => within(screen.getByRole('region', { name: columnName }))
+            .getAllByRole('listitem')
+            .map((item) => item.querySelector('.jobItemCompany')?.textContent);
+
+        expect(companyOrder('Applied')).toEqual(['Zeta', 'Midway', 'Acme']);
+        expect(companyOrder('New')).toEqual(['Newer New', 'Older New']);
+    });
 });
