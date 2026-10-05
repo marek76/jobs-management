@@ -855,4 +855,73 @@ describe('JobList', () => {
         expect(order).toEqual(['Acme', 'Zeta']);
         expect(within(screen.getByRole('region', { name: 'New' })).queryByText('Acme')).not.toBeInTheDocument();
     });
+
+    it('sorts the Applied column from newest when that option is selected', async () => {
+        const user = userEvent.setup();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([
+            {
+                id: 1,
+                companyName: 'Newer New',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-15T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+            {
+                id: 2,
+                companyName: 'Older New',
+                position: 'Backend developer',
+                description: '',
+                openDate: '2026-09-02T00:00:00',
+                submissionDate: null,
+                state: 'new',
+            },
+            {
+                id: 3,
+                companyName: 'Zeta',
+                position: 'QA engineer',
+                description: '',
+                openDate: '2026-09-20T00:00:00',
+                submissionDate: '2026-09-21T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 4,
+                companyName: 'Acme',
+                position: 'Frontend developer',
+                description: '',
+                openDate: '2026-09-01T00:00:00',
+                submissionDate: '2026-09-03T00:00:00',
+                state: 'applied',
+            },
+            {
+                id: 5,
+                companyName: 'Midway',
+                position: 'Full stack developer',
+                description: '',
+                openDate: '2026-09-10T00:00:00',
+                submissionDate: '2026-09-11T00:00:00',
+                state: 'applied',
+            },
+        ]));
+
+        renderJobList();
+
+        const appliedColumn = screen.getByRole('region', { name: 'Applied' });
+        const sort = within(appliedColumn).getByRole('combobox', { name: 'Sort' });
+        expect(sort).toHaveValue('oldest');
+        expect(within(sort).getByRole('option', { name: 'from oldest' })).toBeInTheDocument();
+        expect(within(sort).getByRole('option', { name: 'from newest' })).toBeInTheDocument();
+        expect(within(screen.getByRole('region', { name: 'New' })).queryByRole('combobox', { name: 'Sort' })).not.toBeInTheDocument();
+
+        await user.selectOptions(sort, 'newest');
+
+        const companyOrder = (columnName: string) => within(screen.getByRole('region', { name: columnName }))
+            .getAllByRole('listitem')
+            .map((item) => item.querySelector('.jobItemCompany')?.textContent);
+
+        expect(companyOrder('Applied')).toEqual(['Zeta', 'Midway', 'Acme']);
+        expect(companyOrder('New')).toEqual(['Newer New', 'Older New']);
+    });
 });

@@ -18,13 +18,23 @@ type JobListProps = {
 const JOB_COLUMNS = Object.keys(JobItemState) as JobItemStateKey[];
 const JOB_DRAG_TYPE = 'application/x-job-id';
 
-const jobsInColumn = (jobs: JobItem[], columnState: JobItemStateKey): JobItem[] => {
+type AppliedOpenDateSort = 'oldest' | 'newest';
+
+const jobsInColumn = (
+    jobs: JobItem[],
+    columnState: JobItemStateKey,
+    appliedSort: AppliedOpenDateSort,
+): JobItem[] => {
     const columnJobs = jobs.filter((job) => job.state === columnState);
     if (columnState !== 'applied') {
         return columnJobs;
     }
 
-    return [...columnJobs].sort((left, right) => left.openDate.getTime() - right.openDate.getTime());
+    const direction = appliedSort === 'newest' ? -1 : 1;
+
+    return [...columnJobs].sort(
+        (left, right) => (left.openDate.getTime() - right.openDate.getTime()) * direction,
+    );
 };
 
 const EditIcon = () => (
@@ -236,6 +246,7 @@ export const JobList = ({ filter }: JobListProps) => {
     const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
     const [editingJobId, setEditingJobId] = useState<number | null>(null);
     const [viewingJobId, setViewingJobId] = useState<number | null>(null);
+    const [appliedSort, setAppliedSort] = useState<AppliedOpenDateSort>('oldest');
     const [draggingJob, setDraggingJob] = useState<JobItem | null>(null);
     const [dropTarget, setDropTarget] = useState<JobItemStateKey | null>(null);
     const draggingJobRef = useRef<JobItem | null>(null);
@@ -306,7 +317,7 @@ export const JobList = ({ filter }: JobListProps) => {
                         return null;
                     }
 
-                    const columnJobs = jobsInColumn(jobs, columnState);
+                    const columnJobs = jobsInColumn(jobs, columnState, appliedSort);
                     const titleId = `job-column-${columnState}`;
                     const activeDragJob = draggingJob;
                     const canDrop = activeDragJob !== null
@@ -358,9 +369,25 @@ export const JobList = ({ filter }: JobListProps) => {
                                 clearDragState();
                             }}
                         >
-                            <h3 id={titleId} className="jobColumnTitle">
-                                {JobItemState[columnState]}
-                            </h3>
+                            <div className="jobColumnHeader">
+                                <h3 id={titleId} className="jobColumnTitle">
+                                    {JobItemState[columnState]}
+                                </h3>
+                                {columnState === 'applied' ? (
+                                    <label className="jobColumnSort">
+                                        Sort
+                                        <select
+                                            value={appliedSort}
+                                            onChange={(event) => {
+                                                setAppliedSort(event.target.value as AppliedOpenDateSort);
+                                            }}
+                                        >
+                                            <option value="oldest">from oldest</option>
+                                            <option value="newest">from newest</option>
+                                        </select>
+                                    </label>
+                                ) : null}
+                            </div>
                             <ul className="jobList">
                                 {columnJobs.map((job) => (
                                     <JobListItem
