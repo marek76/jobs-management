@@ -18,6 +18,15 @@ type JobListProps = {
 const JOB_COLUMNS = Object.keys(JobItemState) as JobItemStateKey[];
 const JOB_DRAG_TYPE = 'application/x-job-id';
 
+const jobsInColumn = (jobs: JobItem[], columnState: JobItemStateKey): JobItem[] => {
+    const columnJobs = jobs.filter((job) => job.state === columnState);
+    if (columnState !== 'applied') {
+        return columnJobs;
+    }
+
+    return [...columnJobs].sort((left, right) => left.openDate.getTime() - right.openDate.getTime());
+};
+
 const EditIcon = () => (
     <svg
         className="jobEditIcon"
@@ -297,7 +306,7 @@ export const JobList = ({ filter }: JobListProps) => {
                         return null;
                     }
 
-                    const columnJobs = jobs.filter((job) => job.state === columnState);
+                    const columnJobs = jobsInColumn(jobs, columnState);
                     const titleId = `job-column-${columnState}`;
                     const activeDragJob = draggingJob;
                     const canDrop = activeDragJob !== null
